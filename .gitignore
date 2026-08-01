@@ -1,0 +1,19 @@
+# 运行时配置（含飞书 Webhook 密钥，不要提交）
+config.json
+
+# 已处理帖子 ID 记录（运行时维护）
+processed_ids.json
+
+# 股票数据缓存
+stock_data_cache.json
+
+# 临时文件目录
+temp/*
+!temp/.gitkeep
+
+# 日志文件
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db

@@ -1,0 +1,17 @@
+{
+  "feishu": {
+    "webhookUrl": "https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxxxxxxxxxxxxxx",
+    "keyword": "特朗普",
+    "atAll": true
+  },
+  "schedule": {
+    "intervalHours": 1,
+    "timezone": "Asia/Shanghai"
+  },
+  "monitor": {
+    "limit": 20,
+    "bjHourStart": 17,
+    "bjHourEnd": 9,
+    "note": "北京时间 17:00-次日 9:00 为监控时段（美股开盘相关），其余时段静默跳过。bjHourStart>=17 或 bjHourEnd<=9 表示夜间时段监控"
+  }
+}
