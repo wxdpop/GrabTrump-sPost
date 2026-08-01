@@ -10,12 +10,12 @@
 
 本技能**不绑定特定 AI Agent 或平台**，也**不绑定特定机器路径**。核心执行逻辑封装在 `trump_stock_monitor.js`（纯 Node.js 脚本），脚本内部使用 `__dirname` 自动定位技能根目录，所有文件路径均相对于技能根目录。**任何能调用 Node.js 并按输出协议处理的 AI Agent 均可承载**，包括但不限于：
 
-| Agent / 平台 | 自动化任务承载方式 |
-|---|---|
-| **Trae** | 使用内置 `Schedule` 工具创建 cron 定时任务（推荐，原生支持） |
-| **Claude Code** | 由 LLM 自动确定：可用系统 cron (Linux/macOS)、Task Scheduler (Windows) |
-| **CodeX** | 由 LLM 自动确定：可用系统 cron、launchd (macOS) |
-| **其他支持自动化的 Agent** | 由 LLM 自动选择合适的调度方式，只要能定时触发 `node trump_stock_monitor.js` 即可 |
+| Agent / 平台         | 自动化任务承载方式                                                   |
+| ------------------ | ----------------------------------------------------------- |
+| **Trae**           | 使用内置 `Schedule` 工具创建 cron 定时任务（推荐，原生支持）                     |
+| **Claude Code**    | 由 LLM 自动确定：可用系统 cron (Linux/macOS)、Task Scheduler (Windows) |
+| **CodeX**          | 由 LLM 自动确定：可用系统 cron、launchd (macOS)                        |
+| **其他支持自动化的 Agent** | 由 LLM 自动选择合适的调度方式，只要能定时触发 `node trump_stock_monitor.js` 即可  |
 
 只要 Agent 具备以下基础能力，即可承载本技能：
 
@@ -26,90 +26,26 @@
 
 ## 技能安装与更新
 
-### 一键安装（任意平台）
+### 安装
 
-本技能为纯 Node.js 实现，通过 git clone 即可完成安装。根据你的操作系统选择对应命令：
+将以下命令复制到你的 AI Agent（如 Trae、Claude Code、CodeX 等）对话框中直接发送，由 LLM 自动安装到当前 Agent 的全局技能目录，安装后全局生效：
 
-**macOS / Linux (bash):**
-
-```bash
-git clone https://github.com/wxdpop/GrabTrump-sPost.git ~/GrabTrump-sPost
+```
+安装技能 https://github.com/wxdpop/GrabTrump-sPost 到全局技能目录
 ```
 
-**Windows (PowerShell):**
-
-```powershell
-git clone https://github.com/wxdpop/GrabTrump-sPost.git $HOME\GrabTrump-sPost
-```
-
-### 安装为对应 Agent 全局技能
-
-将克隆下来的目录放置或链接到目标 Agent 的全局技能目录，即可让该 Agent 自动发现并加载本技能。脚本内部使用 `__dirname` 自定位，无论放在哪个目录均可正常运行。
-
-#### Trae（明确支持）
-
-Trae 的全局技能目录为 `~/.trae-cn/skills/`，每个技能为一个包含 `SKILL.md` 的子目录。
-
-**macOS / Linux:**
-
-```bash
-# 直接克隆到 Trae 全局技能目录
-git clone https://github.com/wxdpop/GrabTrump-sPost.git ~/.trae-cn/skills/GrabTrump-sPost
-```
-
-**Windows (PowerShell):**
-
-```powershell
-git clone https://github.com/wxdpop/GrabTrump-sPost.git $HOME\.trae-cn\skills\GrabTrump-sPost
-```
-
-安装后重启 Trae，在技能列表中即可看到 `grab-trump-post` 技能。
-
-#### Claude Code / CodeX / 其他 Agent
-
-不同 Agent 的全局技能/命令目录可能不同，由 LLM 自动确定最合适的放置位置。通用做法：
-
-1. 先按上方"一键安装"克隆到任意位置
-2. 通过软链接或 Agent 配置指向该目录
-3. 或由 LLM 在会话中通过文件路径直接调用 `SKILL.md`
-
-**macOS / Linux 软链接示例：**
-
-```bash
-# 假设 Agent 全局技能目录为 ~/.agent/skills/
-ln -s ~/GrabTrump-sPost ~/.agent/skills/GrabTrump-sPost
-```
-
-**Windows 软链接示例（需管理员权限）：**
-
-```powershell
-# 假设 Agent 全局技能目录为 $HOME\.agent\skills\
-New-Item -ItemType SymbolicLink -Path "$HOME\.agent\skills\GrabTrump-sPost" -Target "$HOME\GrabTrump-sPost"
-```
-
-> 注：具体全局目录位置请参考对应 Agent 的官方文档，或由 Agent 自动确定。本技能不绑定特定目录，放在哪里都能运行。
+> LLM 会自动识别当前 Agent 类型，将技能克隆到对应的全局技能目录（如 Trae 的 `~/.trae-cn/skills/`），并完成必要的初始化。脚本内部使用 `__dirname` 自定位，无需关心具体路径。
 
 ### 更新
 
-进入技能目录，执行 git pull 即可更新到最新版本：
+将以下命令复制到 Agent 对话框发送即可更新到最新版本：
 
-**macOS / Linux:**
-
-```bash
-cd ~/GrabTrump-sPost && git pull
-# 若安装在 Trae 全局技能目录下：
-cd ~/.trae-cn/skills/GrabTrump-sPost && git pull
+```
+更新全局技能 GrabTrump-sPost https://github.com/wxdpop/GrabTrump-sPost
 ```
 
-**Windows:**
+> 更新后无需重新初始化，现有 `config.json` 和定时任务配置会保留（已被 .gitignore 忽略）。
 
-```powershell
-cd $HOME\GrabTrump-sPost; git pull
-# 若安装在 Trae 全局技能目录下：
-cd $HOME\.trae-cn\skills\GrabTrump-sPost; git pull
-```
-
-更新后无需重新初始化，现有 `config.json` 和定时任务配置会保留（已被 .gitignore 忽略）。
 ## 二、用户使用方法
 
 ### 步骤 1：注册飞书群机器人
@@ -126,7 +62,7 @@ cd $HOME\.trae-cn\skills\GrabTrump-sPost; git pull
 ### 步骤 2：准备运行环境
 
 - 安装 **Node.js v16+**（推荐 v18 或 v20 LTS）
-- 克隆本仓库：
+- 若未通过上方"技能安装与更新"章节安装，可手动克隆：
 
 ```bash
 git clone https://github.com/wxdpop/GrabTrump-sPost.git
@@ -162,13 +98,13 @@ cp config.example.json config.json
 
 字段说明：
 
-| 字段 | 说明 |
-|---|---|
-| `feishu.webhookUrl` | 飞书自定义机器人 Webhook 地址 |
-| `feishu.keyword` | 飞书安全关键词（必须与机器人配置一致） |
-| `feishu.atAll` | 是否 @所有人（true 触发手机推送通知） |
-| `schedule.intervalHours` | 执行间隔（小时） |
-| `monitor.limit` | 每次抓取的最新帖子数量上限 |
+| 字段                       | 说明                     |
+| ------------------------ | ---------------------- |
+| `feishu.webhookUrl`      | 飞书自定义机器人 Webhook 地址    |
+| `feishu.keyword`         | 飞书安全关键词（必须与机器人配置一致）    |
+| `feishu.atAll`           | 是否 @所有人（true 触发手机推送通知） |
+| `schedule.intervalHours` | 执行间隔（小时）               |
+| `monitor.limit`          | 每次抓取的最新帖子数量上限          |
 
 ### 步骤 4：调用技能初始化
 
@@ -209,13 +145,13 @@ node trump_stock_monitor.js --demo
 
 本技能为**纯 Node.js 实现**，仅依赖 Node.js 内置模块，**无需 npm install**：
 
-| 模块 | 用途 | 是否需安装 |
-|---|---|---|
-| `https` | HTTPS 请求（抓取帖子、发送飞书） | ❌ 内置 |
-| `http` | HTTP 请求（兜底） | ❌ 内置 |
-| `zlib` | gzip/deflate 解压 | ❌ 内置 |
-| `fs` | 文件读写（配置、历史记录、临时文件） | ❌ 内置 |
-| `path` | 路径拼接（跨平台兼容） | ❌ 内置 |
+| 模块      | 用途                  | 是否需安装 |
+| ------- | ------------------- | ----- |
+| `https` | HTTPS 请求（抓取帖子、发送飞书） | ❌ 内置  |
+| `http`  | HTTP 请求（兜底）         | ❌ 内置  |
+| `zlib`  | gzip/deflate 解压     | ❌ 内置  |
+| `fs`    | 文件读写（配置、历史记录、临时文件）  | ❌ 内置  |
+| `path`  | 路径拼接（跨平台兼容）         | ❌ 内置  |
 
 **运行环境要求**：
 
@@ -275,14 +211,14 @@ GrabTrump'sPost/              # 技能根目录（SKILL.md 所在目录）
 
 ## 八、故障排查
 
-| 问题 | 解决方案 |
-|---|---|
-| 脚本无输出 | 正常（无新帖子/非监控时段/未点名公司） |
-| `config.json` 不存在 | 输入"初始化"重新配置，或手动复制 `config.example.json` |
-| 飞书发送失败 | 检查 `config.json` 中 webhookUrl 是否正确、关键词是否匹配 |
-| 历史记录异常 | 执行 `node trump_stock_monitor.js --reset` 清空重来 |
-| 抓取失败 | 脚本会自动主备切换，AI 可用 WebFetch 兜底访问 trumpstruth.org |
-| 临时文件堆积 | 正常情况推送后自动清理；如残留可手动删除 `temp/` 下文件（保留 .gitkeep） |
+| 问题                | 解决方案                                          |
+| ----------------- | --------------------------------------------- |
+| 脚本无输出             | 正常（无新帖子/非监控时段/未点名公司）                          |
+| `config.json` 不存在 | 输入"初始化"重新配置，或手动复制 `config.example.json`       |
+| 飞书发送失败            | 检查 `config.json` 中 webhookUrl 是否正确、关键词是否匹配    |
+| 历史记录异常            | 执行 `node trump_stock_monitor.js --reset` 清空重来 |
+| 抓取失败              | 脚本会自动主备切换，AI 可用 WebFetch 兜底访问 trumpstruth.org |
+| 临时文件堆积            | 正常情况推送后自动清理；如残留可手动删除 `temp/` 下文件（保留 .gitkeep） |
 
 ## License
 
