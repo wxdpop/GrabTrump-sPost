@@ -127,6 +127,57 @@ function printConfigMissingHint() {
   ].join('\n'));
 }
 
+// ============ 可靠文件写入（约束：所有本地文件写入必须走此函数）============
+/**
+ * 可靠写入文件：使用 fs.writeFileSync 同步写入，写入后立即校验落库情况
+ * 约束原因：部分 Agent 宿主的 Write 工具可能返回成功但实际未落盘（Length=0），
+ *          脚本内部所有文件写入必须走此函数，确保数据真实持久化。
+ *
+ * 写入策略：
+ *   1. 使用 fs.openSync + fs.writeSync + fs.fsyncSync 同步刷盘（阻断式，避免异步未 flush）
+ *   2. 写入后立即 fs.statSync 校验文件大小 > 0（检测空文件异常）
+ *   3. 读回内容与写入内容做严格相等校验（检测部分写入/截断）
+ *   4. 失败时抛出明确错误（不静默吞掉，便于 Agent 排查）
+ *
+ * @param {string} filePath - 文件绝对路径
+ * @param {string|Buffer} content - 写入内容
+ * @param {object} [options] - 预留 options（如 {encoding:'utf8'}），与 fs.writeFileSync 签名兼容
+ * @returns {{size:number, verified:boolean}} 落库校验结果
+ * @throws {Error} 写入失败 / 校验失败时抛出明确错误
+ */
+function safeWriteFileSync(filePath, content, options) {
+  // 1. 确保父目录存在
+  const parentDir = path.dirname(filePath);
+  if (!fs.existsSync(parentDir)) {
+    fs.mkdirSync(parentDir, { recursive: true });
+  }
+
+  // 2. 同步写入（使用 fd 方式以便 fsync 强制刷盘）
+  const fd = fs.openSync(filePath, 'w');
+  try {
+    const buf = Buffer.isBuffer(content) ? content : Buffer.from(String(content), (options && options.encoding) || 'utf8');
+    fs.writeSync(fd, buf, 0, buf.length, 0);
+    fs.fsyncSync(fd);  // 强制刷盘到物理磁盘
+  } finally {
+    fs.closeSync(fd);
+  }
+
+  // 3. 落库校验：文件大小 > 0
+  const stat = fs.statSync(filePath);
+  if (stat.size === 0) {
+    throw new Error('[safeWriteFileSync] 落库校验失败：文件大小为 0 - ' + filePath);
+  }
+
+  // 4. 落库校验：读回内容与写入内容一致（避免部分写入/截断）
+  const readBack = fs.readFileSync(filePath, options && options.encoding ? { encoding: options.encoding } : undefined);
+  const expected = Buffer.isBuffer(content) ? content.toString() : String(content);
+  if (readBack !== expected) {
+    throw new Error('[safeWriteFileSync] 落库校验失败：读回内容与写入内容不一致 - ' + filePath + ' (期望 ' + expected.length + ' 字符, 实际 ' + String(readBack).length + ' 字符)');
+  }
+
+  return { size: stat.size, verified: true };
+}
+
 // ============ 临时文件目录管理 ============
 /**
  * 确保 temp/ 目录存在
@@ -677,8 +728,11 @@ function loadHistory() {
 function saveHistory(history) {
   history.lastRun = new Date().toISOString();
   try {
-    fs.writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2));
-  } catch (e) { /* ignore */ }
+    // 约束：使用 safeWriteFileSync 可靠写入，确保历史记录真实落盘
+    safeWriteFileSync(HISTORY_FILE, JSON.stringify(history, null, 2), { encoding: 'utf8' });
+  } catch (e) {
+    process.stderr.write('[saveHistory] 写入历史记录失败: ' + (e && e.message ? e.message : e) + '\n');
+  }
 }
 
 function resetHistory() {

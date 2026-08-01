@@ -366,6 +366,8 @@ node trump_stock_monitor.js --send-feishu "/path/to/report.txt"
 7. **推送后自动清理 temp/**：保留 .gitkeep，删除其他文件
 8. **飞书发送失败不阻断流程**：继续执行告警后交互
 9. **路径不硬编码**：所有文件路径均相对于技能根目录，脚本用 `__dirname` 自定位
+10. **写入后必须校验落库（硬性约束）**：Agent 使用 Write 工具写入 `config.json`、`temp/feishu_report.txt` 等任何文件后，**必须立即用 Read 工具或 `fs.statSync` 校验文件大小 > 0**，确认内容真实落盘。若校验失败（文件为空或内容不一致），必须改用 Node.js `fs.writeFileSync` + `fs.fsyncSync` + 读回校验的方式重写，不可静默放过
+11. **脚本内部文件写入约束**：`trump_stock_monitor.js` 内部所有文件写入（如 `processed_ids.json`、`temp/` 临时文件）必须走 `safeWriteFileSync` 函数（fsync 刷盘 + size 校验 + 读回一致性校验），禁止直接调用 `fs.writeFile`（异步）或未校验的 `fs.writeFileSync`
 
 ---
 
@@ -378,4 +380,6 @@ node trump_stock_monitor.js --send-feishu "/path/to/report.txt"
 | 飞书发送失败 | 检查 `config.json` 中 webhookUrl 是否正确、关键词是否匹配 |
 | 历史记录异常 | 执行 `node trump_stock_monitor.js --reset` 清空重来 |
 | 抓取失败 | 脚本会自动主备切换，AI 可用 WebFetch 兜底访问 trumpstruth.org |
+| `config.json` 为空（Length=0） | Write 工具未正确落盘。改用 `node -e "fs.writeFileSync(...)"` + fsync 重写，并校验 size > 0 |
+| 脚本写入 safeWriteFileSync 报错 | 落库校验失败（磁盘满/权限问题/读回不一致）。查看 stderr 错误信息，检查磁盘空间和父目录权限 |
 | 临时文件堆积 | 正常情况推送后自动清理；如残留可手动删除 `temp/` 下文件（保留 .gitkeep） |
