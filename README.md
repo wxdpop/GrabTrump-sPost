@@ -24,6 +24,92 @@
 - 能通过定时调度机制触发任务（cron / Task Scheduler / launchd 等）
 - 能使用 AskUserQuestion 或等价交互能力（用于告警后交互）
 
+## 技能安装与更新
+
+### 一键安装（任意平台）
+
+本技能为纯 Node.js 实现，通过 git clone 即可完成安装。根据你的操作系统选择对应命令：
+
+**macOS / Linux (bash):**
+
+```bash
+git clone https://github.com/wxdpop/GrabTrump-sPost.git ~/GrabTrump-sPost
+```
+
+**Windows (PowerShell):**
+
+```powershell
+git clone https://github.com/wxdpop/GrabTrump-sPost.git $HOME\GrabTrump-sPost
+```
+
+### 安装为对应 Agent 全局技能
+
+将克隆下来的目录放置或链接到目标 Agent 的全局技能目录，即可让该 Agent 自动发现并加载本技能。脚本内部使用 `__dirname` 自定位，无论放在哪个目录均可正常运行。
+
+#### Trae（明确支持）
+
+Trae 的全局技能目录为 `~/.trae-cn/skills/`，每个技能为一个包含 `SKILL.md` 的子目录。
+
+**macOS / Linux:**
+
+```bash
+# 直接克隆到 Trae 全局技能目录
+git clone https://github.com/wxdpop/GrabTrump-sPost.git ~/.trae-cn/skills/GrabTrump-sPost
+```
+
+**Windows (PowerShell):**
+
+```powershell
+git clone https://github.com/wxdpop/GrabTrump-sPost.git $HOME\.trae-cn\skills\GrabTrump-sPost
+```
+
+安装后重启 Trae，在技能列表中即可看到 `grab-trump-post` 技能。
+
+#### Claude Code / CodeX / 其他 Agent
+
+不同 Agent 的全局技能/命令目录可能不同，由 LLM 自动确定最合适的放置位置。通用做法：
+
+1. 先按上方"一键安装"克隆到任意位置
+2. 通过软链接或 Agent 配置指向该目录
+3. 或由 LLM 在会话中通过文件路径直接调用 `SKILL.md`
+
+**macOS / Linux 软链接示例：**
+
+```bash
+# 假设 Agent 全局技能目录为 ~/.agent/skills/
+ln -s ~/GrabTrump-sPost ~/.agent/skills/GrabTrump-sPost
+```
+
+**Windows 软链接示例（需管理员权限）：**
+
+```powershell
+# 假设 Agent 全局技能目录为 $HOME\.agent\skills\
+New-Item -ItemType SymbolicLink -Path "$HOME\.agent\skills\GrabTrump-sPost" -Target "$HOME\GrabTrump-sPost"
+```
+
+> 注：具体全局目录位置请参考对应 Agent 的官方文档，或由 Agent 自动确定。本技能不绑定特定目录，放在哪里都能运行。
+
+### 更新
+
+进入技能目录，执行 git pull 即可更新到最新版本：
+
+**macOS / Linux:**
+
+```bash
+cd ~/GrabTrump-sPost && git pull
+# 若安装在 Trae 全局技能目录下：
+cd ~/.trae-cn/skills/GrabTrump-sPost && git pull
+```
+
+**Windows:**
+
+```powershell
+cd $HOME\GrabTrump-sPost; git pull
+# 若安装在 Trae 全局技能目录下：
+cd $HOME\.trae-cn\skills\GrabTrump-sPost; git pull
+```
+
+更新后无需重新初始化，现有 `config.json` 和定时任务配置会保留（已被 .gitignore 忽略）。
 ## 二、用户使用方法
 
 ### 步骤 1：注册飞书群机器人
